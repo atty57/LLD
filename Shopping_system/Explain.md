@@ -1,6 +1,3 @@
-Certainly! Here’s a polished and well-structured README-style writeup of your low-level Amazon shopping system design. This format uses clear headings, bullet points, and concise explanations to maximize readability and professionalism.
-
----
 
 # Amazon Shopping System – Low-Level Design
 
