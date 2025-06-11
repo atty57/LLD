@@ -1,0 +1,353 @@
+classDiagram
+    %% Account Hierarchy
+    class Account {
+        <<abstract>>
+        -String accountId
+        -String name
+        -String email
+        -String phoneNumber
+        -String password
+        -Date dateOfBirth
+        -List~Address~ addresses
+        -List~Card~ paymentCards
+        -List~Banking~ bankAccounts
+        -Date createdAt
+        -AccountStatus status
+        +addAddress(Address)
+        +addPaymentCard(Card)
+        +addBankAccount(Banking)
+        +canModifyProduct()* boolean
+        +canBlockUser()* boolean
+    }
+    
+    class User {
+        -ShoppingCart cart
+        -List~Order~ orders
+        -List~Product~ wishlist
+        -List~Product~ recentlyViewed
+        +placeOrder() Order
+        +cancelOrder(String orderId)
+        +checkOrderStatus(String orderId) OrderStatus
+        +canModifyProduct() boolean
+        +canBlockUser() boolean
+    }
+    
+    class Admin {
+        -List~String~ permissions
+        -String adminLevel
+        +addProduct(Product)
+        +removeProduct(String productId)
+        +blockUser(String userId)
+        +canModifyProduct() boolean
+        +canBlockUser() boolean
+    }
+    
+    %% Address and Payment Classes
+    class Address {
+        -String addressId
+        -String houseNumber
+        -String street
+        -String city
+        -String state
+        -String zipCode
+        -String country
+        -AddressType type
+        -boolean isDefault
+        +getFullAddress() String
+    }
+    
+    class Card {
+        <<abstract>>
+        #String cardId
+        #String cardholderName
+        #String cardNumber
+        #String cvv
+        #Date expiryDate
+        #CardStatus status
+        +processPayment(double amount)* boolean
+        +getTransactionLimit()* double
+        #maskCardNumber(String) String
+    }
+    
+    class DebitCard {
+        -double dailyLimit
+        -String linkedAccountNumber
+        +processPayment(double amount) boolean
+        +getTransactionLimit() double
+    }
+    
+    class CreditCard {
+        -double creditLimit
+        -double availableCredit
+        -double minimumPayment
+        +processPayment(double amount) boolean
+        +getTransactionLimit() double
+        -calculateMinimumPayment() double
+    }
+    
+    class Banking {
+        -String bankingId
+        -String accountNumber
+        -String bankName
+        -String ifscCode
+        -BankingStatus status
+        +initiatePayment(double amount) boolean
+    }
+    
+    %% Product Related Classes
+    class ProductCatalog {
+        <<singleton>>
+        -static ProductCatalog instance
+        -String catalogId
+        -String name
+        -List~Product~ products
+        -Map categoryProductMap
+        -Date lastUpdated
+        -ProductCatalog()
+        +getInstance() ProductCatalog
+        +addProduct(Product)
+        +removeProduct(String productId)
+        +searchProducts(String query) List~Product~
+        +getProductsByCategory(String) List~Product~
+    }
+    
+    class Product {
+        -String productId
+        -String name
+        -String description
+        -double price
+        -List~String~ availableSizes
+        -List~String~ availableColors
+        -ProductCategory category
+        -int stockQuantity
+        -String sellerId
+        -List~String~ images
+        -double rating
+        -int reviewCount
+        -ProductStatus status
+        +isAvailable() boolean
+        +updateStock(int quantity)
+        +addReview(double rating)
+    }
+    
+    class ProductCategory {
+        -String categoryId
+        -String name
+        -String description
+        -ProductCategory parentCategory
+        -List~ProductCategory~ subCategories
+        +addSubCategory(ProductCategory)
+        +getFullCategoryPath() String
+    }
+    
+    %% Shopping Cart and Order Classes
+    class ShoppingCart {
+        -String cartId
+        -User owner
+        -List~Item~ items
+        -double totalAmount
+        -Date lastModified
+        +addItem(Product, int, String, String)
+        +removeItem(String itemId)
+        +updateItemQuantity(String, int)
+        +clear()
+        +getItems() List~Item~
+        -recalculateTotal()
+    }
+    
+    class Item {
+        -String itemId
+        -Product product
+        -int quantity
+        -String selectedSize
+        -String selectedColor
+        -double priceAtTimeOfAddition
+        +getSubtotal() double
+        +updateQuantity(int)
+    }
+    
+    class Order {
+        -String orderId
+        -User user
+        -List~Item~ items
+        -Address deliveryAddress
+        -OrderStatus status
+        -Date orderDate
+        -double totalAmount
+        -Payment payment
+        -Invoice invoice
+        -Status shipmentStatus
+        +setDeliveryAddress(Address)
+        +processPayment(Payment)
+        +canBeCancelled() boolean
+        +cancel()
+        -generateInvoice()
+        -createShipmentStatus()
+    }
+    
+    class Invoice {
+        -String invoiceId
+        -Order order
+        -Date invoiceDate
+        -double amount
+        -double tax
+        -double shippingCharges
+        -double discount
+        -double finalAmount
+        -String invoiceUrl
+        -calculateCharges()
+        -generateInvoicePDF()
+    }
+    
+    %% Payment Classes
+    class Payment {
+        <<abstract>>
+        #String paymentId
+        #double amount
+        #PaymentStatus status
+        #Date paymentDate
+        #String transactionId
+        +processPayment(double) boolean
+        #executePayment()* boolean
+        +refund() boolean
+        #executeRefund()* boolean
+    }
+    
+    class CashPayment {
+        -boolean cashCollected
+        -String collectionAgentId
+        #executePayment() boolean
+        #executeRefund() boolean
+        +markCashCollected(String agentId)
+    }
+    
+    class DebitCardPayment {
+        -DebitCard debitCard
+        -String authorizationCode
+        #executePayment() boolean
+        #executeRefund() boolean
+    }
+    
+    class CreditCardPayment {
+        -CreditCard creditCard
+        -String authorizationCode
+        -int emiMonths
+        +setEmiMonths(int)
+        #executePayment() boolean
+        #executeRefund() boolean
+        -calculateEmiAmount() double
+    }
+    
+    %% Notification Classes
+    class Notification {
+        <<abstract>>
+        #String notificationId
+        #String description
+        #Date timestamp
+        #NotificationType type
+        #NotificationStatus status
+        +send() boolean
+        #validate()* boolean
+        #sendNotification()* boolean
+    }
+    
+    class EmailNotification {
+        -String emailId
+        -String subject
+        -String htmlBody
+        -List~String~ attachments
+        #validate() boolean
+        #sendNotification() boolean
+        +addAttachment(String)
+    }
+    
+    class SMSNotification {
+        -String phoneNumber
+        -int characterLimit
+        #validate() boolean
+        #sendNotification() boolean
+    }
+    
+    %% Status and Search Classes
+    class Status {
+        -String statusId
+        -Order order
+        -ShipmentStatus currentStatus
+        -Date lastUpdated
+        -Date expectedDeliveryDate
+        -String description
+        -List~StatusHistory~ statusHistory
+        -String trackingNumber
+        -String courierPartner
+        +updateStatus(ShipmentStatus, String)
+        -addStatusUpdate(ShipmentStatus, String)
+        -sendStatusNotification()
+        -calculateExpectedDelivery()
+    }
+    
+    class SearchInterface {
+        <<interface>>
+        +search(String) List~Product~
+        +searchByCategory(String) List~Product~
+        +searchByPriceRange(double, double) List~Product~
+        +searchWithFilters(SearchCriteria) List~Product~
+    }
+    
+    class ProductSearchService {
+        -ProductCatalog catalog
+        +search(String) List~Product~
+        +searchByCategory(String) List~Product~
+        +searchByPriceRange(double, double) List~Product~
+        +searchWithFilters(SearchCriteria) List~Product~
+    }
+    
+    %% Relationships
+    
+    %% Inheritance relationships
+    Account <|-- User : extends
+    Account <|-- Admin : extends
+    Card <|-- DebitCard : extends
+    Card <|-- CreditCard : extends
+    Payment <|-- CashPayment : extends
+    Payment <|-- DebitCardPayment : extends
+    Payment <|-- CreditCardPayment : extends
+    Notification <|-- EmailNotification : extends
+    Notification <|-- SMSNotification : extends
+    
+    %% Composition relationships (filled diamond - strong ownership)
+    Account *-- Address : has many
+    Account *-- Card : has many
+    Account *-- Banking : has many
+    User *-- ShoppingCart : has one
+    Order *-- Invoice : has one
+    Order *-- Status : has one
+    
+    %% Association relationships
+    User --> Order : places many
+    User ..> SearchInterface : uses
+    Admin ..> ProductCatalog : manages
+    
+    ShoppingCart --> Item : contains many
+    Item --> Product : references
+    
+    Order --> User : belongs to
+    Order --> Item : contains many
+    Order --> Payment : has one
+    Order --> Address : delivers to
+    
+    Product --> ProductCategory : belongs to
+    ProductCategory --> ProductCategory : has subcategories
+    
+    ProductCatalog --> Product : contains many
+    ProductCatalog ..> SearchInterface : used by
+    
+    DebitCardPayment --> DebitCard : uses
+    CreditCardPayment --> CreditCard : uses
+    
+    Status --> Order : tracks
+    Status ..> Notification : triggers
+    
+    Invoice --> Order : for
+    
+    ProductSearchService ..|> SearchInterface : implements
+    ProductSearchService --> ProductCatalog : uses
