@@ -1,97 +1,104 @@
-
-# Amazon Shopping System – Low-Level Design
-
-## Overview
-
+Amazon Shopping System – Low-Level Design
+Overview
 This document details the low-level design of an Amazon-like shopping system, built using robust object-oriented principles and a layered architecture. The system separates concerns across account management, product catalog, shopping flow, and order fulfillment, ensuring maintainability and scalability.
 
----
+Architecture & Layered Design
+Account Management: Handles user and admin accounts, including addresses and payment methods.
 
-## Architecture & Layered Design
+Product Management: Manages the product catalog, product categories, and individual products.
 
-- **Account Management:** Handles user and admin accounts, including addresses and payment methods.
-- **Product Management:** Manages the product catalog, product categories, and individual products.
-- **Shopping Flow:** Manages shopping carts, orders, payments, invoices, and delivery tracking.
+Shopping Flow: Manages shopping carts, orders, payments, invoices, and delivery tracking.
 
----
+Key Design Patterns
+Singleton Pattern:
+ProductCatalog is a singleton, ensuring a single, consistent source of product data.
 
-## Key Design Patterns
+Template Method Pattern:
+Used in Payment and Notification classes, allowing subclasses to define specific steps while sharing a common workflow.
 
-- **Singleton Pattern:**  
-  `ProductCatalog` is a singleton, ensuring a single, consistent source of product data.
+Composition Over Inheritance:
+Entities like Address and Card are composed within Account, reflecting strong ownership.
 
-- **Template Method Pattern:**  
-  Used in `Payment` and `Notification` classes, allowing subclasses to define specific steps while sharing a common workflow.
+Factory Pattern (Implied):
+Unique ID generators (e.g., generateOrderId) act as factory methods for creating unique identifiers.
 
-- **Composition Over Inheritance:**  
-  Entities like `Address` and `Card` are composed within `Account`, reflecting strong ownership.
+Class Relationships
+Inheritance
+Account (abstract)
 
-- **Factory Pattern (Implied):**  
-  Unique ID generators (e.g., `generateOrderId`) act as factory methods for creating unique identifiers.
+User (can shop, place orders)
 
----
+Admin (can manage catalog and users)
 
-## Class Relationships
+Composition
+Account contains:
 
-### Inheritance
+Address[]
 
-- `Account` (abstract)
-  - `User` (can shop, place orders)
-  - `Admin` (can manage catalog and users)
+Card[] (DebitCard, CreditCard)
 
-### Composition
+Banking[]
 
-- `Account` contains:
-  - `Address[]`
-  - `Card[]` (`DebitCard`, `CreditCard`)
-  - `Banking[]`
-- `User` contains:
-  - `ShoppingCart`
-  - `Order[]`
-- `Order` contains:
-  - `Invoice`
-  - `Status`
+User contains:
 
-### Association
+ShoppingCart
 
-- `ProductCatalog` aggregates `Product[]`
-- `Product` associated with `ProductCategory`
-- `ShoppingCart` contains `Item[]` (each referencing a `Product`)
-- `Order` references `User`, `Item[]`, `Payment`, `Invoice`, and `Status`
+Order[]
 
----
+Order contains:
 
-## Core Workflows
+Invoice
 
-1. **User Registration & Setup**
-   - New users register, creating a `User` object.
-   - Users add addresses and payment methods (composed within their account).
+Status
 
-2. **Product Search & Browsing**
-   - Users search via `ProductSearchService` (implements `SearchInterface`).
-   - Service queries the singleton `ProductCatalog`.
+Association
+ProductCatalog aggregates Product[]
 
-3. **Shopping Cart Management**
-   - Each user has a `ShoppingCart`.
-   - Adding products creates `Item` objects (with size, color, quantity).
-   - Cart recalculates totals on updates.
+Product associated with ProductCategory
 
-4. **Order Placement**
-   - Placing an order creates an `Order` with copies of cart items (price locked at purchase time).
+ShoppingCart contains Item[] (each referencing a Product)
 
-5. **Payment Processing**
-   - Payment handled polymorphically (`CashPayment`, `DebitCardPayment`, `CreditCardPayment`).
-   - The order process is agnostic to payment type.
+Order references User, Item[], Payment, Invoice, and Status
 
-6. **Order Fulfillment**
-   - Successful payment generates an `Invoice` and a `Status` object for tracking.
-   - `Status` maintains a history and triggers notifications.
+Core Workflows
+User Registration & Setup
 
----
+New users register, creating a User object.
 
-## Textual Class Diagram
+Users add addresses and payment methods (composed within their account).
 
-```
+Product Search & Browsing
+
+Users search via ProductSearchService (implements SearchInterface).
+
+Service queries the singleton ProductCatalog.
+
+Shopping Cart Management
+
+Each user has a ShoppingCart.
+
+Adding products creates Item objects (with size, color, quantity).
+
+Cart recalculates totals on updates.
+
+Order Placement
+
+Placing an order creates an Order with copies of cart items (price locked at purchase time).
+
+Payment Processing
+
+Payment handled polymorphically (CashPayment, DebitCardPayment, CreditCardPayment).
+
+The order process is agnostic to payment type.
+
+Order Fulfillment
+
+Successful payment generates an Invoice and a Status object for tracking.
+
+Status maintains a history and triggers notifications.
+
+Textual Class Diagram
+text
 Account (abstract)
 ├── User
 │   ├── ShoppingCart (composition)
@@ -137,48 +144,31 @@ Status
 ├── Order (belongs to)
 ├── StatusHistory[]
 └── Triggers → Notification
-```
+Key Design Decisions & Benefits
+Separation of Product and Item:
+Product is a catalog entry; Item captures user-specific choices (size, color) in carts/orders.
 
----
+Payment Abstraction:
+The abstract Payment class enables easy addition of new payment methods (Open-Closed Principle).
 
-## Key Design Decisions & Benefits
+Status Tracking with History:
+Status maintains a full history of order states, supporting detailed tracking and transparency.
 
-- **Separation of Product and Item:**  
-  `Product` is a catalog entry; `Item` captures user-specific choices (size, color) in carts/orders.
+Notification System:
+Abstract Notification allows for multiple channels (Email, SMS), easily extendable to others.
 
-- **Payment Abstraction:**  
-  The abstract `Payment` class enables easy addition of new payment methods (Open-Closed Principle).
+Scalability & Extensibility
+Product Expansion:
+Add new product types by creating new ProductCategory instances.
 
-- **Status Tracking with History:**  
-  `Status` maintains a full history of order states, supporting detailed tracking and transparency.
+Payment Methods:
+Extend the Payment class for new payment types without impacting existing code.
 
-- **Notification System:**  
-  Abstract `Notification` allows for multiple channels (Email, SMS), easily extendable to others.
+Notification Channels:
+Implement new subclasses of Notification for additional communication methods.
 
----
+Search Flexibility:
+SearchInterface allows for plug-and-play search implementations, including integration with external services.
 
-## Scalability & Extensibility
-
-- **Product Expansion:**  
-  Add new product types by creating new `ProductCategory` instances.
-
-- **Payment Methods:**  
-  Extend the `Payment` class for new payment types without impacting existing code.
-
-- **Notification Channels:**  
-  Implement new subclasses of `Notification` for additional communication methods.
-
-- **Search Flexibility:**  
-  `SearchInterface` allows for plug-and-play search implementations, including integration with external services.
-
-- **Performance:**  
-  The singleton `ProductCatalog` can be enhanced with caching for scalability.
-
----
-
-## Conclusion
-
-This low-level design provides a solid, extensible foundation for a scalable e-commerce system. It leverages proven design patterns, clear class relationships, and modular workflows to support both current functionality and future growth.
-
----
-
+Performance:
+The singleton ProductCatalog can be enhanced with caching for scalability.
