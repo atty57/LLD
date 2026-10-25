@@ -1,0 +1,66 @@
+classDiagram
+    class Vehicle {
+        <<abstract>>
+        #String licensePlate
+        #VehicleType type
+        +getType() VehicleType
+    }
+    class Motorcycle
+    class Car
+    class Truck
+
+    class ParkingSpot {
+        -String spotId
+        -SpotType spotType
+        -Vehicle currentVehicle
+        +isFree() boolean
+        +canFit(Vehicle) boolean
+        +park(Vehicle)
+        +vacate() Vehicle
+    }
+
+    class ParkingFloor {
+        -int floorNumber
+        -List~ParkingSpot~ spots
+        +findFreeSpot(Vehicle) Optional
+    }
+
+    class Ticket {
+        -String ticketId
+        -Vehicle vehicle
+        -ParkingSpot spot
+        -long entryTimeMillis
+        -long exitTimeMillis
+        +markExit()
+        +getParkedMillis() long
+    }
+
+    class PricingStrategy {
+        <<interface>>
+        +calculate(Ticket) double
+    }
+    class HourlyPricingStrategy {
+        -Map ratePerHour
+        +calculate(Ticket) double
+    }
+
+    class ParkingLot {
+        -List~ParkingFloor~ floors
+        -PricingStrategy pricing
+        -Map activeTickets
+        +park(Vehicle) Ticket
+        +exit(String ticketId) double
+    }
+
+    Vehicle <|-- Motorcycle
+    Vehicle <|-- Car
+    Vehicle <|-- Truck
+    HourlyPricingStrategy ..|> PricingStrategy
+
+    ParkingFloor *-- ParkingSpot : has many
+    ParkingLot *-- ParkingFloor : has many
+    ParkingLot --> PricingStrategy : uses
+    ParkingLot --> Ticket : issues
+    Ticket --> Vehicle : for
+    Ticket --> ParkingSpot : occupies
+    ParkingSpot --> Vehicle : holds
