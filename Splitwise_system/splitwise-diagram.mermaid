@@ -1,0 +1,49 @@
+classDiagram
+    class User {
+        -String userId
+        -String name
+        -String email
+    }
+
+    class SplitStrategy {
+        <<interface>>
+        +computeShares(double, List, double[]) Map
+    }
+    class EqualSplit
+    class ExactSplit
+    class PercentSplit
+
+    class Expense {
+        -String expenseId
+        -String description
+        -double amount
+        -String paidByUserId
+        -Map shares
+        +getShares() Map
+    }
+
+    class BalanceSheet {
+        -Map balances
+        +addExpense(Expense)
+        +get(String, String) double
+        +debtsOf(String) Map
+    }
+
+    class DebtSimplifier {
+        +simplify(Map) List~Transfer~
+    }
+    class Transfer {
+        +String from
+        +String to
+        +double amount
+    }
+
+    EqualSplit ..|> SplitStrategy
+    ExactSplit ..|> SplitStrategy
+    PercentSplit ..|> SplitStrategy
+
+    Expense --> SplitStrategy : split using
+    Expense --> User : paid by
+    BalanceSheet ..> Expense : consumes
+    BalanceSheet --> User : tracks pairs
+    DebtSimplifier --> Transfer : produces
