@@ -1,0 +1,43 @@
+classDiagram
+    class Request {
+        -int floor
+        -Direction direction
+        -RequestType type
+        +getFloor() int
+        +getDirection() Direction
+        +getType() RequestType
+    }
+
+    class Elevator {
+        -int id
+        -int currentFloor
+        -Direction direction
+        -TreeSet~Integer~ upStops
+        -TreeSet~Integer~ downStops
+        +addStop(int floor)
+        +step() int
+        +distanceTo(int floor) int
+        +isIdle() boolean
+    }
+
+    class DispatchStrategy {
+        <<interface>>
+        +selectElevator(List, Request) Elevator
+    }
+    class NearestCarStrategy {
+        +selectElevator(List, Request) Elevator
+    }
+
+    class ElevatorController {
+        -List~Elevator~ elevators
+        -DispatchStrategy dispatcher
+        +handleExternalRequest(Request)
+        +handleInternalRequest(int, int)
+        +step()
+    }
+
+    NearestCarStrategy ..|> DispatchStrategy
+    ElevatorController *-- Elevator : controls many
+    ElevatorController --> DispatchStrategy : uses
+    ElevatorController ..> Request : routes
+    DispatchStrategy ..> Elevator : selects
