@@ -1,0 +1,56 @@
+classDiagram
+    class Movie {
+        -String movieId
+        -String title
+        -int durationMinutes
+    }
+    class Theatre {
+        -String theatreId
+        -String name
+        -String city
+        -List~Screen~ screens
+    }
+    class Screen {
+        -String screenId
+        -List~Seat~ seats
+    }
+    class Seat {
+        -String seatId
+        -SeatType type
+    }
+
+    class Show {
+        -String showId
+        -Movie movie
+        -Screen screen
+        -long startTimeMillis
+        -Map seatStates
+        -Map holdExpiry
+        +hold(List) boolean
+        +confirm(List)
+        +release(List)
+        +availableSeats() List
+    }
+
+    class Booking {
+        -String bookingId
+        -Show show
+        -String userId
+        -List~String~ seatIds
+        -BookingStatus status
+        +getSeatIds() List
+    }
+
+    class BookingService {
+        +reserve(Show, String, List) Booking
+        +confirm(Show, Booking)
+        +cancel(Show, Booking)
+    }
+
+    Theatre *-- Screen : has many
+    Screen *-- Seat : has many
+    Show --> Movie : screens
+    Show --> Screen : in
+    Booking --> Show : for
+    BookingService ..> Show : holds/confirms seats
+    BookingService --> Booking : creates
